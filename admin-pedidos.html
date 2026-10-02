@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pedidos | ClasesPro</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      padding: 32px 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .tabla-wrap {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    th {
+      background: #eef2ff;
+    }
+    .empty {
+      color: #6b7280;
+      font-style: italic;
+    }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index2.html" class="btn">← Volver</a>
+    <h1>Pedidos recibidos</h1>
+
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Plan</th>
+            <th>Email</th>
+            <th>Estado</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPedidos">
+          <tr>
+            <td colspan="6" class="empty">Cargando pedidos...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function cargarPedidos() {
+      try {
+        const respuesta = await fetch('/pedidos');
+        const data = await respuesta.json();
+        const tbody = document.getElementById('tbodyPedidos');
+
+        if (!data.pedidos || data.pedidos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay pedidos todavía.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.pedidos.map(pedido => {
+          const amount = (pedido.amount_total / 100).toFixed(2);
+          return `
+            <tr>
+              <td>${pedido.id}</td>
+              <td>${pedido.plan}</td>
+              <td>${pedido.email || '—'}</td>
+              <td>${pedido.status}</td>
+              <td>$${amount} ${pedido.currency?.toUpperCase() || 'USD'}</td>
+              <td>${new Date(pedido.created).toLocaleString()}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        document.getElementById('tbodyPedidos').innerHTML = `
+          <tr>
+            <td colspan="6" class="empty">Error al cargar pedidos: ${error.message}</td>
+          </tr>
+        `;
+      }
+    }
+
+    cargarPedidos();
+    setInterval(cargarPedidos, 5000);
+  </script>
+</body>
+</html>
